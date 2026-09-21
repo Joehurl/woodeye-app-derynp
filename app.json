@@ -18,7 +18,8 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "WoodEye uses your camera to photograph wood samples for species identification.",
         "NSPhotoLibraryUsageDescription": "WoodEye accesses your photo library so you can select existing wood photos for identification.",
-        "NSPhotoLibraryAddUsageDescription": "WoodEye saves identified wood photos to your photo library."
+        "NSPhotoLibraryAddUsageDescription": "WoodEye saves identified wood photos to your photo library.",
+        "NSLocationWhenInUseUsageDescription": "WoodEye uses your location to find lumber suppliers near you."
       }
     },
     "android": {
@@ -31,7 +32,9 @@
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.READ_MEDIA_IMAGES"
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
       ]
     },
     "web": {
@@ -56,6 +59,12 @@
         {
           "photosPermission": "WoodEye accesses your photo library so you can select existing wood photos for identification.",
           "cameraPermission": "WoodEye uses your camera to photograph wood samples for species identification."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "WoodEye uses your location to find lumber suppliers near you."
         }
       ]
     ],

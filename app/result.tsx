@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,19 @@ import {
   Animated,
   useColorScheme,
   ImageSourcePropType,
+  Alert,
+  Linking,
+  Platform,
+  ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MapPin, Layers, Palette, Hammer, Home, DollarSign, Leaf } from 'lucide-react-native';
+import { MapPin, Layers, Palette, Hammer, Home, DollarSign, Leaf, Store } from 'lucide-react-native';
 import { COLORS } from '@/constants/WoodColors';
 import { WoodResult } from '@/types/wood';
 import { Image } from 'expo-image';
+import * as Location from 'expo-location';
 
 function resolveImageSource(source: string | number | ImageSourcePropType | undefined): ImageSourcePropType {
   if (!source) return { uri: '' };
@@ -89,6 +95,7 @@ export default function ResultScreen() {
   const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ data: string }>();
+  const [isFindingSuppliers, setIsFindingSuppliers] = useState(false);
 
   let result: WoodResult | null = null;
   try {
@@ -116,6 +123,66 @@ export default function ResultScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [heroOpacity, headerSlide]);
 
+  const handleFindSuppliers = async () => {
+    if (!result) return;
+    const species = result.species;
+    console.log('[WoodEye] Find Nearby Suppliers tapped for species:', species);
+
+    setIsFindingSuppliers(true);
+    try {
+      const { status, canAskAgain } = await Location.requestForegroundPermissionsAsync();
+      console.log('[WoodEye] Location permission status:', status, 'canAskAgain:', canAskAgain);
+
+      if (status !== 'granted') {
+        if (!canAskAgain) {
+          Alert.alert(
+            'Location Permission Required',
+            'Location access has been denied. Please enable it in Settings to find suppliers near you.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Open Settings',
+                onPress: () => {
+                  console.log('[WoodEye] Opening device settings for location permission');
+                  Linking.openSettings();
+                },
+              },
+            ]
+          );
+        } else {
+          Alert.alert(
+            'Location Access Needed',
+            'Location access is needed to find suppliers near you.'
+          );
+        }
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      const lat = location.coords.latitude;
+      const lng = location.coords.longitude;
+      console.log('[WoodEye] Opening maps for suppliers:', species, lat, lng);
+
+      let mapsUrl: string;
+      if (Platform.OS === 'ios') {
+        mapsUrl = `maps://?q=${encodeURIComponent(species + ' lumber yard')}&near=${lat},${lng}`;
+      } else if (Platform.OS === 'android') {
+        mapsUrl = `geo:${lat},${lng}?q=${encodeURIComponent(species + ' lumber yard near me')}`;
+      } else {
+        mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(species + ' lumber yard near me')}`;
+      }
+
+      await Linking.openURL(mapsUrl);
+    } catch (error) {
+      console.log('[WoodEye] Error finding suppliers:', error);
+      Alert.alert('Error', 'Could not open Maps. Please try again.');
+    } finally {
+      setIsFindingSuppliers(false);
+    }
+  };
+
   if (!result || !result.species) {
     return (
       <View style={{ flex: 1, backgroundColor: bg, justifyContent: 'center', alignItems: 'center' }}>
@@ -133,6 +200,7 @@ export default function ResultScreen() {
   const heroImageLabel = `Photo of ${result.species} wood`;
   const funFactLabel = `Fun fact: ${result.funFact}`;
   const confidenceBadgeLabel = `Identification confidence: ${confidenceDisplay}`;
+  const suppliersAccessibilityLabel = `Find nearby suppliers for ${result.species}`;
   const currentYear = new Date().getFullYear();
 
   return (
@@ -259,8 +327,67 @@ export default function ResultScreen() {
             content={result.sustainability}
           />
 
-          {/* Fun fact card */}
+          {/* Find Nearby Suppliers button */}
           <AnimatedCard index={6}>
+            <TouchableOpacity
+              onPress={() => {
+                console.log('[WoodEye] Find Nearby Suppliers button pressed');
+                handleFindSuppliers();
+              }}
+              disabled={isFindingSuppliers}
+              accessibilityRole="button"
+              accessibilityLabel={suppliersAccessibilityLabel}
+              accessibilityHint="Opens Maps to search for local lumber yards"
+              activeOpacity={0.75}
+            >
+              <View style={{
+                backgroundColor: COLORS.primaryMuted,
+                borderRadius: 16,
+                padding: 16,
+                marginBottom: 12,
+                borderWidth: 1,
+                borderColor: isDark ? COLORS.dark.border : COLORS.border,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 14,
+                opacity: isFindingSuppliers ? 0.7 : 1,
+              }}>
+                <View style={{
+                  width: 44, height: 44, borderRadius: 12,
+                  backgroundColor: COLORS.primary,
+                  justifyContent: 'center', alignItems: 'center',
+                  flexShrink: 0,
+                }}>
+                  {isFindingSuppliers
+                    ? <ActivityIndicator size="small" color="#FFFFFF" />
+                    : <Store size={22} color="#FFFFFF" />
+                  }
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{
+                    fontFamily: 'DMSans_700Bold',
+                    fontSize: 15,
+                    color: isDark ? COLORS.dark.text : COLORS.text,
+                    marginBottom: 2,
+                  }}>
+                    Find Nearby Suppliers
+                  </Text>
+                  <Text style={{
+                    fontFamily: 'DMSans_400Regular',
+                    fontSize: 13,
+                    color: isDark ? COLORS.dark.textSecondary : COLORS.textSecondary,
+                    lineHeight: 18,
+                  }}>
+                    Locate lumber yards &amp; wood dealers near you
+                  </Text>
+                </View>
+                <MapPin size={18} color={COLORS.primary} />
+              </View>
+            </TouchableOpacity>
+          </AnimatedCard>
+
+          {/* Fun fact card */}
+          <AnimatedCard index={7}>
             <View
               accessibilityLabel={funFactLabel}
               style={{
@@ -281,7 +408,7 @@ export default function ResultScreen() {
           </AnimatedCard>
 
           {/* Disclaimer */}
-          <AnimatedCard index={7}>
+          <AnimatedCard index={8}>
             <Text style={{
               fontFamily: 'DMSans_400Regular',
               fontSize: 12,
