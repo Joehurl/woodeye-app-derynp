@@ -13,7 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.woodfinder.app",
+      "bundleIdentifier": "com.woodfinder.io",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "WoodEye uses your camera to photograph wood samples for species identification.",
