@@ -43,7 +43,7 @@ const SECTIONS = [
   },
   {
     heading: 'Governing Law',
-    body: 'These terms are governed by the laws of the jurisdiction in which WoodEye operates, without regard to conflict of law principles.',
+    body: 'These terms are governed by the laws of the Commonwealth of Massachusetts, United States, without regard to conflict of law principles.',
   },
   {
     heading: 'Changes to Terms',
@@ -51,7 +51,7 @@ const SECTIONS = [
   },
   {
     heading: 'Contact',
-    body: 'Questions about these terms? Contact us at legal@woodeye.app.',
+    body: 'Questions about these terms? Contact Joseph Hurley at joehurl36@gmail.com.',
   },
 ];
 

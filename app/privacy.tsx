@@ -47,7 +47,7 @@ const SECTIONS = [
   },
   {
     heading: 'Contact',
-    body: 'If you have questions about this privacy policy, contact us at privacy@woodeye.app.',
+    body: 'If you have questions about this privacy policy, contact Joseph Hurley at joehurl36@gmail.com.',
   },
 ];
 
