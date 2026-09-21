@@ -13,16 +13,19 @@ import {
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Trash2, Clock, Info } from 'lucide-react-native';
+import { Trash2, Clock, Info, Crown, Lock } from 'lucide-react-native';
 import { AnimatedPressable } from '@/components/AnimatedPressable';
 import { COLORS } from '@/constants/WoodColors';
 import { getHistory, deleteFromHistory } from '@/utils/historyStorage';
 import { HistoryEntry } from '@/types/wood';
 import { Image } from 'expo-image';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
+
+const FREE_HISTORY_LIMIT = 3;
 
 function resolveImageSource(source: string | number | ImageSourcePropType | undefined): ImageSourcePropType {
   if (!source) return { uri: '' };
@@ -102,6 +105,71 @@ function UndoToast({ visible, onUndo, isDark }: UndoToastProps) {
   );
 }
 
+interface ProUpsellBannerProps {
+  lockedCount: number;
+  isDark: boolean;
+  onUpgrade: () => void;
+}
+
+function ProUpsellBanner({ lockedCount, isDark, onUpgrade }: ProUpsellBannerProps) {
+  return (
+    <AnimatedPressable
+      onPress={onUpgrade}
+      style={{
+        marginHorizontal: 20,
+        marginTop: 8,
+        marginBottom: 16,
+        borderRadius: 16,
+        overflow: 'hidden',
+        backgroundColor: isDark ? '#2A1F17' : '#FFF8F2',
+        borderWidth: 1.5,
+        borderColor: COLORS.primary,
+      }}
+    >
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+        gap: 14,
+      }}>
+        <View style={{
+          width: 44,
+          height: 44,
+          borderRadius: 12,
+          backgroundColor: COLORS.primaryMuted,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+          <Lock size={20} color={COLORS.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 14, color: isDark ? COLORS.dark.text : COLORS.text }}>
+            {lockedCount}
+            {' '}
+            older scan
+            {lockedCount !== 1 ? 's' : ''}
+            {' '}
+            locked
+          </Text>
+          <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: isDark ? COLORS.dark.textSecondary : COLORS.textSecondary, marginTop: 2 }}>
+            Upgrade to Pro for unlimited history
+          </Text>
+        </View>
+        <View style={{
+          backgroundColor: COLORS.primary,
+          paddingHorizontal: 12,
+          paddingVertical: 6,
+          borderRadius: 8,
+        }}>
+          <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 12, color: '#FFFFFF' }}>
+            Upgrade
+          </Text>
+        </View>
+      </View>
+    </AnimatedPressable>
+  );
+}
+
 export default function HistoryScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -111,6 +179,7 @@ export default function HistoryScreen() {
   const [undoVisible, setUndoVisible] = useState(false);
   const [lastDeleted, setLastDeleted] = useState<{ entry: HistoryEntry; index: number } | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { isSubscribed } = useSubscription();
 
   const bg = isDark ? COLORS.dark.background : COLORS.background;
   const surface = isDark ? COLORS.dark.surface : COLORS.surface;
@@ -121,16 +190,19 @@ export default function HistoryScreen() {
   const loadHistory = useCallback(async () => {
     console.log('[WoodEye] Loading history');
     const data = await getHistory();
-    console.log('[WoodEye] History loaded:', data.length, 'entries');
+    console.log('[WoodEye] History loaded:', data.length, 'entries, isSubscribed:', isSubscribed);
     setHistory(data);
     setLoading(false);
-  }, []);
+  }, [isSubscribed]);
 
   useFocusEffect(
     useCallback(() => {
       loadHistory();
     }, [loadHistory])
   );
+
+  const visibleHistory = isSubscribed ? history : history.slice(0, FREE_HISTORY_LIMIT);
+  const lockedCount = isSubscribed ? 0 : Math.max(0, history.length - FREE_HISTORY_LIMIT);
 
   const handleDelete = useCallback((entry: HistoryEntry, index: number) => {
     console.log('[WoodEye] Delete history entry tapped:', entry.species, 'id:', entry.id);
@@ -175,6 +247,16 @@ export default function HistoryScreen() {
     console.log('[WoodEye] Privacy button tapped');
     router.push('/privacy');
   }, []);
+
+  const handleProPress = useCallback(() => {
+    console.log('[WoodEye] Pro button tapped — opening paywall');
+    router.push('/paywall');
+  }, []);
+
+  const handleUpgradeBannerPress = useCallback(() => {
+    console.log('[WoodEye] Upgrade banner tapped — opening paywall, lockedCount:', lockedCount);
+    router.push('/paywall');
+  }, [lockedCount]);
 
   const confidenceText = (c: number) => `${Math.round(c)}% match`;
 
@@ -279,15 +361,39 @@ export default function HistoryScreen() {
             Your past wood identifications
           </Text>
         </View>
-        <TouchableOpacity
-          onPress={handlePrivacyPress}
-          accessibilityLabel="Privacy policy"
-          accessibilityRole="button"
-          accessibilityHint="Opens the privacy policy"
-          style={{ marginTop: 6, padding: 4 }}
-        >
-          <Info size={20} color={textSecondary} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
+          {!isSubscribed && (
+            <TouchableOpacity
+              onPress={handleProPress}
+              accessibilityLabel="Upgrade to Pro"
+              accessibilityRole="button"
+              accessibilityHint="Opens the Pro subscription paywall"
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 5,
+                backgroundColor: COLORS.primary,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 20,
+              }}
+            >
+              <Crown size={13} color="#FFFFFF" />
+              <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 13, color: '#FFFFFF' }}>
+                Pro
+              </Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            onPress={handlePrivacyPress}
+            accessibilityLabel="Privacy policy"
+            accessibilityRole="button"
+            accessibilityHint="Opens the privacy policy"
+            style={{ padding: 4 }}
+          >
+            <Info size={20} color={textSecondary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {loading ? (
@@ -318,9 +424,14 @@ export default function HistoryScreen() {
         </View>
       ) : (
         <FlatList
-          data={history}
+          data={visibleHistory}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
+          ListFooterComponent={
+            lockedCount > 0
+              ? <ProUpsellBanner lockedCount={lockedCount} isDark={isDark} onUpgrade={handleUpgradeBannerPress} />
+              : null
+          }
           contentContainerStyle={{ paddingTop: 4, paddingBottom: insets.bottom + 120 }}
           showsVerticalScrollIndicator={false}
           contentInsetAdjustmentBehavior="automatic"

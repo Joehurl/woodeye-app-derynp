@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Stack, usePathname } from 'expo-router';
 import FloatingTabBar from '@/components/FloatingTabBar';
 import { TabBarItem } from '@/components/FloatingTabBar';
+import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
 
 const TABS: TabBarItem[] = [
   {
@@ -20,6 +21,8 @@ const TABS: TabBarItem[] = [
 ];
 
 export default function TabLayout() {
+  useSubscriptionGuard();
+
   const pathname = usePathname();
   const isResultScreen = pathname.includes('/result');
 
