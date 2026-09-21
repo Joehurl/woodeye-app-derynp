@@ -1,9 +1,55 @@
 import React from 'react';
-import { ScrollView, View, Text, useColorScheme } from 'react-native';
-import { Stack } from 'expo-router';
+import { ScrollView, View, Text, Pressable, useColorScheme } from 'react-native';
+import { Stack, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Shield, Database, Wifi, Smartphone } from 'lucide-react-native';
 import { COLORS } from '@/constants/WoodColors';
+
+const SECTIONS = [
+  {
+    heading: 'Overview',
+    body: 'WoodEye is a wood identification app. We are committed to protecting your privacy. This policy explains what data we collect, how we use it, and your rights.',
+  },
+  {
+    heading: 'Information We Do Not Collect',
+    body: 'We do not collect your name, email address, phone number, location data (location is used only on-device to open Maps and is never transmitted to us), payment information, or any other personally identifiable information. No account or registration is required.',
+  },
+  {
+    heading: 'Camera & Photo Access',
+    body: 'When you take a photo or select one from your gallery, the image is sent to an AI service solely to identify the wood species. The image is not stored on our servers, not linked to any identity, and not used for any purpose other than returning the identification result.',
+  },
+  {
+    heading: 'Scan History',
+    body: 'Your scan history is stored locally on your device using AsyncStorage. It never leaves your device and is not synced to any server or cloud service.',
+  },
+  {
+    heading: 'Location Data',
+    body: 'If you tap "Find Nearby Suppliers", the app requests your device location solely to open your native Maps app with a pre-filled search. Your coordinates are never transmitted to WoodEye or any third party.',
+  },
+  {
+    heading: 'Third-Party Services',
+    body: 'The AI identification feature uses an AI inference service. Images sent for identification are processed transiently and not retained. We do not use advertising networks, analytics SDKs, or any other third-party tracking services.',
+  },
+  {
+    heading: "Children's Privacy",
+    body: 'WoodEye does not knowingly collect any information from children under 13. The app contains no features directed at children.',
+  },
+  {
+    heading: 'Data Retention',
+    body: 'We do not retain any user data on our servers because we do not collect any. Scan history stored on your device can be deleted at any time by clearing the app\'s data or uninstalling the app.',
+  },
+  {
+    heading: 'Your Rights',
+    body: 'Since we collect no personal data, there is nothing to access, correct, or delete on our end. You can delete your local scan history from within the app at any time.',
+  },
+  {
+    heading: 'Changes to This Policy',
+    body: 'We may update this policy from time to time. Continued use of the app after changes constitutes acceptance of the updated policy.',
+  },
+  {
+    heading: 'Contact',
+    body: 'If you have questions about this privacy policy, contact us at privacy@woodeye.app.',
+  },
+];
 
 export default function PrivacyScreen() {
   const colorScheme = useColorScheme();
@@ -11,87 +57,103 @@ export default function PrivacyScreen() {
   const insets = useSafeAreaInsets();
 
   const bg = isDark ? COLORS.dark.background : COLORS.background;
-  const surface = isDark ? COLORS.dark.surface : COLORS.surface;
   const textColor = isDark ? COLORS.dark.text : COLORS.text;
   const textSecondary = isDark ? COLORS.dark.textSecondary : COLORS.textSecondary;
-  const borderColor = isDark ? COLORS.dark.border : COLORS.border;
+  const dividerColor = isDark ? COLORS.dark.divider : COLORS.divider;
 
   const currentYear = new Date().getFullYear();
 
-  const items = [
-    {
-      icon: <Smartphone size={20} color={COLORS.primary} />,
-      title: 'Stored on your device only',
-      body: 'Your scan history is saved locally on your device using AsyncStorage. It is never uploaded to any server.',
-    },
-    {
-      icon: <Wifi size={20} color={COLORS.primary} />,
-      title: 'AI identification',
-      body: 'When you identify wood, the photo is sent to an AI service for analysis. No personal information is attached. Photos are not retained by the AI service after processing.',
-    },
-    {
-      icon: <Database size={20} color={COLORS.primary} />,
-      title: 'No personal data collected',
-      body: 'WoodEye does not collect your name, email, location, or any other personal information. No account is required.',
-    },
-    {
-      icon: <Shield size={20} color={COLORS.primary} />,
-      title: 'No third-party tracking',
-      body: 'WoodEye does not use analytics SDKs, advertising networks, or any third-party tracking libraries.',
-    },
-  ];
+  function handleTermsPress() {
+    console.log('[Privacy] User pressed "View Terms of Service" link');
+    router.push('/terms');
+  }
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Privacy', headerBackButtonDisplayMode: 'minimal' }} />
+      <Stack.Screen options={{ title: 'Privacy Policy', headerBackButtonDisplayMode: 'minimal' }} />
       <ScrollView
         style={{ flex: 1, backgroundColor: bg }}
-        contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 40 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 28, paddingBottom: insets.bottom + 48 }}
         contentInsetAdjustmentBehavior="automatic"
       >
+        {/* Header */}
         <Text style={{
           fontFamily: 'PlayfairDisplay_700Bold',
-          fontSize: 26, color: textColor, letterSpacing: -0.3, marginBottom: 8,
+          fontSize: 28,
+          color: textColor,
+          letterSpacing: -0.4,
+          marginBottom: 6,
         }}>
           Privacy Policy
         </Text>
         <Text style={{
           fontFamily: 'DMSans_400Regular',
-          fontSize: 14, color: textSecondary, lineHeight: 21, marginBottom: 28,
+          fontSize: 14,
+          color: textSecondary,
+          lineHeight: 22,
+          marginBottom: 32,
         }}>
-          WoodEye is designed with your privacy in mind. Here is exactly what we do and don't do with your data.
+          Effective date: {currentYear}
         </Text>
 
-        {items.map((item, i) => (
-          <View key={i} style={{
-            backgroundColor: surface,
-            borderRadius: 16, padding: 16, marginBottom: 12,
-            borderWidth: 1, borderColor,
-            flexDirection: 'row', gap: 14,
-          }}>
-            <View style={{
-              width: 40, height: 40, borderRadius: 12,
-              backgroundColor: COLORS.primaryMuted,
-              justifyContent: 'center', alignItems: 'center',
-              flexShrink: 0,
-            }}>
-              {item.icon}
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 15, color: textColor, marginBottom: 4 }}>
-                {item.title}
+        {/* Sections */}
+        {SECTIONS.map((section, index) => {
+          const isLast = index === SECTIONS.length - 1;
+          return (
+            <View key={section.heading} style={{ marginBottom: isLast ? 0 : 20 }}>
+              <Text style={{
+                fontFamily: 'DMSans_700Bold',
+                fontSize: 15,
+                color: textColor,
+                marginBottom: 6,
+              }}>
+                {section.heading}
               </Text>
-              <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 14, color: textSecondary, lineHeight: 21 }}>
-                {item.body}
+              <Text style={{
+                fontFamily: 'DMSans_400Regular',
+                fontSize: 14,
+                color: textSecondary,
+                lineHeight: 22,
+              }}>
+                {section.body}
               </Text>
+              {!isLast && (
+                <View style={{
+                  height: 1,
+                  backgroundColor: dividerColor,
+                  marginTop: 20,
+                }} />
+              )}
             </View>
-          </View>
-        ))}
+          );
+        })}
 
+        {/* Terms of Service link */}
+        <View style={{ marginTop: 32, alignItems: 'center' }}>
+          <Pressable
+            onPress={handleTermsPress}
+            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          >
+            <Text style={{
+              fontFamily: 'DMSans_400Regular',
+              fontSize: 14,
+              color: COLORS.primary,
+              lineHeight: 22,
+            }}>
+              View Terms of Service →
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Footer */}
         <Text style={{
           fontFamily: 'DMSans_400Regular',
-          fontSize: 12, color: textSecondary, textAlign: 'center',
-          lineHeight: 18, marginTop: 16, opacity: 0.7,
+          fontSize: 12,
+          color: textSecondary,
+          textAlign: 'center',
+          lineHeight: 18,
+          marginTop: 24,
+          opacity: 0.7,
         }}>
           Last updated: {currentYear}
         </Text>

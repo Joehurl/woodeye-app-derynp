@@ -99,7 +99,15 @@ export default function RootLayout() {
                   options={{
                     headerShown: true,
                     headerBackButtonDisplayMode: "minimal",
-                    title: "Privacy",
+                    title: "Privacy Policy",
+                  }}
+                />
+                <Stack.Screen
+                  name="terms"
+                  options={{
+                    headerShown: true,
+                    headerBackButtonDisplayMode: "minimal",
+                    title: "Terms of Service",
                   }}
                 />
               </Stack>
