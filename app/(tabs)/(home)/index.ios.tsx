@@ -3,7 +3,7 @@ import {
   View,
   Text,
   Animated,
-  Alert,
+  Linking,
   useColorScheme,
   ImageSourcePropType,
 } from 'react-native';
@@ -64,7 +64,6 @@ export default function IdentifyScreen() {
   const scanBorderAnim = useRef<Animated.CompositeAnimation | null>(null);
 
   const bg = isDark ? COLORS.dark.background : COLORS.background;
-  const surface = isDark ? COLORS.dark.surface : COLORS.surface;
   const textColor = isDark ? COLORS.dark.text : COLORS.text;
   const textSecondary = isDark ? COLORS.dark.textSecondary : COLORS.textSecondary;
   const borderColor = isDark ? COLORS.dark.border : COLORS.border;
@@ -129,10 +128,15 @@ export default function IdentifyScreen() {
 
   const handleGallery = useCallback(async () => {
     console.log('[WoodEye] Gallery button pressed');
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      console.warn('[WoodEye] Gallery permission denied');
-      Alert.alert('Permission needed', 'Please allow access to your photo library in Settings.');
+      console.warn('[WoodEye] Gallery permission denied, canAskAgain:', canAskAgain);
+      if (!canAskAgain) {
+        console.log('[WoodEye] Gallery permission permanently denied — opening Settings');
+        Linking.openSettings();
+      } else {
+        setErrorMsg('Photo library access is needed to select wood photos.');
+      }
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -154,10 +158,17 @@ export default function IdentifyScreen() {
     await analyzeImage(asset.base64, asset.uri);
   }, [analyzeImage]);
 
-  const handleRequestPermission = useCallback(() => {
-    console.log('[WoodEye] Request camera permission tapped');
-    requestPermission();
-  }, [requestPermission]);
+  const handlePermissionAction = useCallback(() => {
+    if (permission?.canAskAgain) {
+      console.log('[WoodEye] Requesting camera permission');
+      requestPermission();
+    } else {
+      console.log('[WoodEye] Camera permission permanently denied — opening Settings');
+      Linking.openSettings();
+    }
+  }, [permission, requestPermission]);
+
+  const permissionButtonLabel = permission?.canAskAgain ? 'Allow camera access' : 'Open Settings';
 
   if (!permission) {
     return (
@@ -167,11 +178,60 @@ export default function IdentifyScreen() {
     );
   }
 
-  if (!permission.granted) {
+  if (!permission.granted && permission.canAskAgain) {
+    // Pre-permission rationale screen
     return (
       <>
         <Stack.Screen options={{ title: 'WoodEye', headerShown: false }} />
-        <View style={{ flex: 1, backgroundColor: bg, paddingTop: insets.top + 20, paddingHorizontal: 24, paddingBottom: insets.bottom + 100 }}>
+        <View style={{ flex: 1, backgroundColor: bg, paddingTop: insets.top + 20, paddingHorizontal: 24, paddingBottom: insets.bottom + 40 }}>
+          <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 32, color: textColor, marginBottom: 8, letterSpacing: -0.5 }}>
+            WoodEye
+          </Text>
+          <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 16, color: textSecondary, marginBottom: 48 }}>
+            Identify any wood species
+          </Text>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{
+              width: 80, height: 80, borderRadius: 24,
+              backgroundColor: COLORS.primaryMuted,
+              justifyContent: 'center', alignItems: 'center', marginBottom: 24,
+            }}>
+              <Camera size={36} color={COLORS.primary} />
+            </View>
+            <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 22, color: textColor, marginBottom: 12, textAlign: 'center' }}>
+              Identify wood with your camera
+            </Text>
+            <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 15, color: textSecondary, textAlign: 'center', lineHeight: 23, maxWidth: 300, marginBottom: 36 }}>
+              WoodEye uses your camera to photograph wood samples. Point at any wood surface and we'll identify the species, grain, hardness, and more.
+            </Text>
+            <AnimatedPressable
+              onPress={handlePermissionAction}
+              accessibilityLabel="Allow camera access"
+              accessibilityRole="button"
+              accessibilityHint="Requests permission to use your camera"
+              style={{
+                backgroundColor: COLORS.primary,
+                paddingHorizontal: 40, paddingVertical: 16,
+                borderRadius: 14, flexDirection: 'row', alignItems: 'center', gap: 8,
+              }}
+            >
+              <Camera size={18} color="#FFF" />
+              <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 16, color: '#FFF' }}>
+                Continue
+              </Text>
+            </AnimatedPressable>
+          </View>
+        </View>
+      </>
+    );
+  }
+
+  if (!permission.granted && !permission.canAskAgain) {
+    // Permanently denied — show Settings link
+    return (
+      <>
+        <Stack.Screen options={{ title: 'WoodEye', headerShown: false }} />
+        <View style={{ flex: 1, backgroundColor: bg, paddingTop: insets.top + 20, paddingHorizontal: 24, paddingBottom: insets.bottom + 40 }}>
           <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 32, color: textColor, marginBottom: 8, letterSpacing: -0.5 }}>
             WoodEye
           </Text>
@@ -190,10 +250,12 @@ export default function IdentifyScreen() {
               Camera access needed
             </Text>
             <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 15, color: textSecondary, textAlign: 'center', lineHeight: 22, maxWidth: 280, marginBottom: 32 }}>
-              WoodEye needs camera access to photograph and identify wood species.
+              WoodEye needs camera access to photograph and identify wood species. Please enable it in Settings.
             </Text>
             <AnimatedPressable
-              onPress={handleRequestPermission}
+              onPress={handlePermissionAction}
+              accessibilityLabel="Open Settings to enable camera access"
+              accessibilityRole="button"
               style={{
                 backgroundColor: COLORS.primary,
                 paddingHorizontal: 32, paddingVertical: 16,
@@ -202,7 +264,7 @@ export default function IdentifyScreen() {
             >
               <Settings size={18} color="#FFF" />
               <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 16, color: '#FFF' }}>
-                Allow camera access
+                {permissionButtonLabel}
               </Text>
             </AnimatedPressable>
           </View>
@@ -290,7 +352,10 @@ export default function IdentifyScreen() {
                   <SkeletonPulse width={120} height={14} borderRadius={7} />
                   <SkeletonPulse width={140} height={14} borderRadius={7} />
                 </View>
-                <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 16, color: '#F5EDE6', marginTop: 8 }}>
+                <Text
+                  style={{ fontFamily: 'DMSans_500Medium', fontSize: 16, color: '#F5EDE6', marginTop: 8 }}
+                  accessibilityLiveRegion="polite"
+                >
                   Analyzing wood...
                 </Text>
               </View>
@@ -333,7 +398,9 @@ export default function IdentifyScreen() {
               justifyContent: 'center', alignItems: 'center',
               borderWidth: 1, borderColor,
             }}
-            accessibilityLabel="Pick from gallery"
+            accessibilityLabel="Choose photo from library"
+            accessibilityRole="button"
+            accessibilityHint="Opens your photo library to select a wood photo"
           >
             <ImageIcon size={22} color={isDark ? COLORS.dark.textSecondary : COLORS.textSecondary} />
           </AnimatedPressable>
@@ -349,7 +416,9 @@ export default function IdentifyScreen() {
               justifyContent: 'center', alignItems: 'center',
               boxShadow: '0 4px 20px rgba(139,69,19,0.4)',
             }}
-            accessibilityLabel="Capture photo"
+            accessibilityLabel="Take photo to identify wood"
+            accessibilityRole="button"
+            accessibilityHint="Takes a photo and analyzes the wood species"
           >
             <Camera size={32} color="#FFF" />
           </AnimatedPressable>

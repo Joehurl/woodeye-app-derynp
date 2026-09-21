@@ -9,21 +9,30 @@
     "splash": {
       "image": "./assets/images/app-icon-yso.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF"
+      "backgroundColor": "#FAF7F4"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.placeholder.app",
+      "bundleIdentifier": "com.woodeye.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "WoodEye uses your camera to photograph wood samples for species identification.",
+        "NSPhotoLibraryUsageDescription": "WoodEye accesses your photo library so you can select existing wood photos for identification.",
+        "NSPhotoLibraryAddUsageDescription": "WoodEye saves identified wood photos to your photo library."
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/app-icon-yso.png",
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "#FAF7F4"
       },
-      "package": "com.placeholder.app"
+      "package": "com.woodeye.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES"
+      ]
     },
     "web": {
       "favicon": "./assets/images/newly.png",
@@ -33,7 +42,22 @@
       "expo-font",
       "expo-router",
       "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "WoodEye uses your camera to photograph wood samples for species identification.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "WoodEye accesses your photo library so you can select existing wood photos for identification.",
+          "cameraPermission": "WoodEye uses your camera to photograph wood samples for species identification."
+        }
+      ]
     ],
     "scheme": "woodeye",
     "experiments": {

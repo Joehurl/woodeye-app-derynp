@@ -94,6 +94,14 @@ export default function RootLayout() {
                     title: "Wood Analysis",
                   }}
                 />
+                <Stack.Screen
+                  name="privacy"
+                  options={{
+                    headerShown: true,
+                    headerBackButtonDisplayMode: "minimal",
+                    title: "Privacy",
+                  }}
+                />
               </Stack>
               <SystemBars style={"auto"} />
             </GestureHandlerRootView>

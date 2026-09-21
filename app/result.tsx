@@ -73,7 +73,10 @@ function InfoCard({ icon, title, content, index, isDark }: InfoCardProps) {
             {title}
           </Text>
         </View>
-        <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 14, color: textSecondary, lineHeight: 21 }}>
+        <Text
+          accessibilityRole="text"
+          style={{ fontFamily: 'DMSans_400Regular', fontSize: 14, color: textSecondary, lineHeight: 21 }}
+        >
           {content}
         </Text>
       </View>
@@ -95,7 +98,6 @@ export default function ResultScreen() {
   }
 
   const bg = isDark ? COLORS.dark.background : COLORS.background;
-  const surface = isDark ? COLORS.dark.surface : COLORS.surface;
   const textColor = isDark ? COLORS.dark.text : COLORS.text;
   const textSecondary = isDark ? COLORS.dark.textSecondary : COLORS.textSecondary;
   const borderColor = isDark ? COLORS.dark.border : COLORS.border;
@@ -128,6 +130,10 @@ export default function ResultScreen() {
   const confidenceDisplay = `${Math.round(confidenceNum)}% match`;
   const hardnessDisplay = `${Number(result.hardness).toLocaleString()} lbf`;
   const bestUsesDisplay = Array.isArray(result.bestUses) ? result.bestUses.join(', ') : String(result.bestUses ?? '');
+  const heroImageLabel = `Photo of ${result.species} wood`;
+  const funFactLabel = `Fun fact: ${result.funFact}`;
+  const confidenceBadgeLabel = `Identification confidence: ${confidenceDisplay}`;
+  const currentYear = new Date().getFullYear();
 
   return (
     <>
@@ -150,14 +156,19 @@ export default function ResultScreen() {
               source={resolveImageSource(result.imageUri)}
               style={{ width: '100%', height: 260 }}
               contentFit="cover"
+              accessibilityLabel={heroImageLabel}
+              accessibilityRole="image"
             />
             {/* Confidence badge */}
-            <View style={{
-              position: 'absolute', bottom: 16, right: 16,
-              backgroundColor: 'rgba(18,13,9,0.75)',
-              paddingHorizontal: 12, paddingVertical: 6,
-              borderRadius: 20,
-            }}>
+            <View
+              style={{
+                position: 'absolute', bottom: 16, right: 16,
+                backgroundColor: 'rgba(18,13,9,0.75)',
+                paddingHorizontal: 12, paddingVertical: 6,
+                borderRadius: 20,
+              }}
+              accessibilityLabel={confidenceBadgeLabel}
+            >
               <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 13, color: '#F5EDE6' }}>
                 {confidenceDisplay}
               </Text>
@@ -250,13 +261,16 @@ export default function ResultScreen() {
 
           {/* Fun fact card */}
           <AnimatedCard index={6}>
-            <View style={{
-              backgroundColor: isDark ? 'rgba(212,168,83,0.12)' : COLORS.accentMuted,
-              borderRadius: 16, padding: 20,
-              borderWidth: 1,
-              borderColor: isDark ? 'rgba(212,168,83,0.25)' : 'rgba(212,168,83,0.3)',
-              marginBottom: 12,
-            }}>
+            <View
+              accessibilityLabel={funFactLabel}
+              style={{
+                backgroundColor: isDark ? 'rgba(212,168,83,0.12)' : COLORS.accentMuted,
+                borderRadius: 16, padding: 20,
+                borderWidth: 1,
+                borderColor: isDark ? 'rgba(212,168,83,0.25)' : 'rgba(212,168,83,0.3)',
+                marginBottom: 12,
+              }}
+            >
               <Text style={{ fontFamily: 'DMSans_700Bold', fontSize: 15, color: COLORS.accent, marginBottom: 8 }}>
                 Did you know?
               </Text>
@@ -265,6 +279,33 @@ export default function ResultScreen() {
               </Text>
             </View>
           </AnimatedCard>
+
+          {/* Disclaimer */}
+          <AnimatedCard index={7}>
+            <Text style={{
+              fontFamily: 'DMSans_400Regular',
+              fontSize: 12,
+              color: textSecondary,
+              textAlign: 'center',
+              lineHeight: 18,
+              paddingHorizontal: 20,
+              paddingBottom: 8,
+              opacity: 0.7,
+            }}>
+              Wood identification is AI-assisted and may not be 100% accurate. Always verify with a professional for critical applications.
+            </Text>
+          </AnimatedCard>
+
+          <Text style={{
+            fontFamily: 'DMSans_400Regular',
+            fontSize: 11,
+            color: textSecondary,
+            textAlign: 'center',
+            opacity: 0.4,
+            marginBottom: 8,
+          }}>
+            {currentYear}
+          </Text>
         </View>
       </ScrollView>
     </>

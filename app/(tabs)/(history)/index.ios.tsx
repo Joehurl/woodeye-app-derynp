@@ -9,10 +9,11 @@ import {
   UIManager,
   useColorScheme,
   ImageSourcePropType,
+  TouchableOpacity,
 } from 'react-native';
 import { router, useFocusEffect, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Trash2, Clock } from 'lucide-react-native';
+import { Trash2, Clock, Info } from 'lucide-react-native';
 import { AnimatedPressable } from '@/components/AnimatedPressable';
 import { COLORS } from '@/constants/WoodColors';
 import { getHistory, deleteFromHistory } from '@/utils/historyStorage';
@@ -170,17 +171,26 @@ export default function HistoryScreen() {
     });
   }, []);
 
+  const handlePrivacyPress = useCallback(() => {
+    console.log('[WoodEye] Privacy button tapped');
+    router.push('/privacy');
+  }, []);
+
   const confidenceText = (c: number) => `${Math.round(c)}% match`;
 
   const renderItem = ({ item, index }: { item: HistoryEntry; index: number }) => {
     const dateText = formatDate(item.scannedAt);
     const confText = confidenceText(item.confidence);
     const confColor = item.confidence >= 80 ? COLORS.success : item.confidence >= 60 ? COLORS.accent : COLORS.textSecondary;
+    const itemAccessibilityLabel = `${item.species}, scanned ${dateText}, ${Math.round(item.confidence)}% confidence`;
 
     return (
       <AnimatedListItem index={index}>
         <AnimatedPressable
           onPress={() => handleItemPress(item)}
+          accessibilityLabel={itemAccessibilityLabel}
+          accessibilityRole="button"
+          accessibilityHint="Opens detailed wood analysis"
           style={{
             flexDirection: 'row',
             backgroundColor: surface,
@@ -245,6 +255,7 @@ export default function HistoryScreen() {
               borderLeftWidth: 1, borderLeftColor: borderColor,
             }}
             accessibilityLabel={`Delete ${item.species} scan`}
+            accessibilityRole="button"
           >
             <Trash2 size={18} color={COLORS.danger} />
           </AnimatedPressable>
@@ -258,13 +269,27 @@ export default function HistoryScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <View style={{ flex: 1, backgroundColor: bg }}>
         {/* Header */}
-        <View style={{ paddingTop: insets.top + 12, paddingHorizontal: 24, paddingBottom: 16 }}>
-          <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 34, color: textColor, letterSpacing: -0.5 }}>
-            History
-          </Text>
-          <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 15, color: textSecondary, marginTop: 2 }}>
-            Your past wood identifications
-          </Text>
+        <View style={{
+          paddingTop: insets.top + 12, paddingHorizontal: 24, paddingBottom: 16,
+          flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
+        }}>
+          <View>
+            <Text style={{ fontFamily: 'PlayfairDisplay_700Bold', fontSize: 34, color: textColor, letterSpacing: -0.5 }}>
+              History
+            </Text>
+            <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 15, color: textSecondary, marginTop: 2 }}>
+              Your past wood identifications
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={handlePrivacyPress}
+            accessibilityLabel="Privacy policy"
+            accessibilityRole="button"
+            accessibilityHint="Opens the privacy policy"
+            style={{ marginTop: 6, padding: 4 }}
+          >
+            <Info size={20} color={textSecondary} />
+          </TouchableOpacity>
         </View>
 
         {loading ? (
