@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "WoodEye",
+    "name": "woodfinder1",
     "slug": "woodeye",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -27,7 +27,7 @@
         "foregroundImage": "./assets/images/app-icon-yso.png",
         "backgroundColor": "#FAF7F4"
       },
-      "package": "com.woodfinder.app",
+      "package": "com.woodfinder.io",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
